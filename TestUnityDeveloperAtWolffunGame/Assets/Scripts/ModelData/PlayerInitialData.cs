@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 [System.Serializable]
 public class PlayerInitialData
 {
@@ -6,7 +8,5 @@ public class PlayerInitialData
     public int startingLandSlots;
     public int startingEquipmentLevel;
 
-    public int startingTomatoSeeds;
-    public int startingBlueberrySeeds;
-    public int startingCows;
+    public Dictionary<string, int> startingEntities = new Dictionary<string, int>();
 }

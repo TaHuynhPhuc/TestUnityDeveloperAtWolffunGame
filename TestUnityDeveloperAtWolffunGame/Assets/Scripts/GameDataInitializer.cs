@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameDataInitializer : MonoBehaviour
+public class GameDataInitializer : MonoBehaviour, IGameLoadStep
 {
     public static GameDataInitializer Instance { get; private set; }
 
@@ -13,7 +13,12 @@ public class GameDataInitializer : MonoBehaviour
     public HarvestRulesData HarvestRules { get; private set; }
     public PlayerInitialData PlayerInitial { get; private set; }
 
-    public event Action OnDataLoaded;
+    public GameLoadState TargetState => GameLoadState.Start;
+
+    public void OnGameStateEntered()
+    {
+        InitializeData();
+    }
 
     private void Awake()
     {
@@ -21,7 +26,6 @@ public class GameDataInitializer : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            InitializeData();
         }
         else
         {
@@ -40,12 +44,12 @@ public class GameDataInitializer : MonoBehaviour
             HarvestRules = CsvDataLoader.LoadHarvestRules();
             PlayerInitial = CsvDataLoader.LoadPlayerInitial();
 
-            OnDataLoaded?.Invoke();
-            Debug.Log("Game data loaded successfully.");
+            GameLoadManager.Instance.AdvanceTo(GameLoadState.DataLoaded);
+            Debug.Log("[GameDataInitializer] Game data loaded successfully.");
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Failed to load game data: {ex.Message}");
+            Debug.LogError($"[GameDataInitializer] Failed to load game data: {ex.Message}");
         }
     }
 }

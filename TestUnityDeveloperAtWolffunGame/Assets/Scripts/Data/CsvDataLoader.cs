@@ -70,17 +70,27 @@ public class CsvDataLoader
 
     public static PlayerInitialData LoadPlayerInitial()
     {
-        var cells = LoadLines(CsvPaths.PlayerInitial)[1].Trim().Split(',');
-        return new PlayerInitialData
+        var lines = LoadLines(CsvPaths.PlayerInitial);
+        var headers = lines[0].Trim().Split(',');
+        var values = lines[1].Trim().Split(',');
+
+        var data = new PlayerInitialData
         {
-            startingGold = int.Parse(cells[0]),
-            startingWorkers = int.Parse(cells[1]),
-            startingLandSlots = int.Parse(cells[2]),
-            startingEquipmentLevel = int.Parse(cells[3]),
-            startingTomatoSeeds = int.Parse(cells[4]),
-            startingBlueberrySeeds = int.Parse(cells[5]),
-            startingCows = int.Parse(cells[6])
+            startingGold = int.Parse(values[0]),
+            startingWorkers = int.Parse(values[1]),
+            startingLandSlots = int.Parse(values[2]),
+            startingEquipmentLevel = int.Parse(values[3]),
+            startingEntities = new Dictionary<string, int>()
         };
+
+        for (int i = 4; i < headers.Length; i++)
+        {
+            string name = headers[i].Trim();
+            int amount = int.Parse(values[i].Trim());
+            data.startingEntities[name] = amount;
+        }
+
+        return data;
     }
 
     private static string[] LoadLines(string relativePath)
