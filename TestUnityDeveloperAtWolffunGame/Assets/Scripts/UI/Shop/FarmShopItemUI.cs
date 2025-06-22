@@ -29,33 +29,27 @@ public class FarmShopItemUI : MonoBehaviour
     private void Buy()
     {
         int totalCost = data.productPurchasePrice * batchAmount;
-
         if (RuntimeDataManager.Instance.SpendGold(totalCost))
         {
             RuntimeDataManager.Instance.AddEntity(data.productionName, batchAmount);
             FarmEntityButtonSpawner.Instance?.RefreshButtons();
         }
-        else
-        {
-            Debug.LogWarning($"[FarmShopItemUI] Not enough gold to buy {batchAmount} {data.productionName}.");
-        }
     }
 
     private void Sell()
     {
-        int currentAmount = RuntimeDataManager.Instance.GetEntityAmount(data.productionName);
-        if (currentAmount < batchAmount)
+        int currentHarvest = RuntimeDataManager.Instance.GetHarvestedAmount(data.productionName);
+        if (currentHarvest < batchAmount)
         {
-            Debug.LogWarning($"[FarmShopItemUI] Not enough {data.productionName} to sell.");
+            Debug.LogWarning($"[FarmShopItemUI] Not enough harvested {data.productionName} to sell.");
             return;
         }
 
-        RuntimeDataManager.Instance.UseEntity(data.productionName, batchAmount);
-        RuntimeDataManager.Instance.RemoveHarvestedItem(data.productionName, batchAmount);
-        int totalGold = data.productPrice * batchAmount;
-        RuntimeDataManager.Instance.AddGold(totalGold);
-
-        FarmEntityButtonSpawner.Instance?.RefreshButtons();
+        if (RuntimeDataManager.Instance.SellHarvestedItem(data.productionName, batchAmount))
+        {
+            int totalGold = data.productPrice * batchAmount;
+            RuntimeDataManager.Instance.AddGold(totalGold);
+        }
     }
 
 }

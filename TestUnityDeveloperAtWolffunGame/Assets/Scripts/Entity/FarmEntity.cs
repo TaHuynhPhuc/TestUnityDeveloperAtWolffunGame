@@ -16,6 +16,29 @@ public class FarmEntity : MonoBehaviour
     private bool isExpired = false;
 
     private Coroutine growCoroutine;
+    public bool HasHarvestable() => availableHarvestCount > 0;
+    private bool isAssignedToWorker = false;
+
+    public bool IsAssigned => isAssignedToWorker;
+
+    public void MarkAssigned()
+    {
+        isAssignedToWorker = true;
+    }
+
+    public void HarvestByWorker()
+    {
+        if (availableHarvestCount <= 0) return;
+
+        RuntimeDataManager.Instance.AddHarvestedItem(production.productionName, availableHarvestCount);
+        availableHarvestCount = 0;
+
+        isAssignedToWorker = false;
+
+        harvestButton.gameObject.SetActive(false);
+        Debug.Log($"[FarmEntity] Harvested by worker: {production.productionName}");
+    }
+
 
     private void Start()
     {
@@ -79,7 +102,6 @@ public class FarmEntity : MonoBehaviour
         if (availableHarvestCount <= 0) return;
 
         RuntimeDataManager.Instance.AddHarvestedItem(production.productionName, availableHarvestCount);
-        RuntimeDataManager.Instance.AddEntity(production.productionName, availableHarvestCount);
 
         Debug.Log($"[FarmEntity] Harvested {availableHarvestCount} {production.productionName}.");
 
@@ -91,4 +113,10 @@ public class FarmEntity : MonoBehaviour
     {
         harvestButton.GetComponentInChildren<TextMeshProUGUI>().text = $"x{availableHarvestCount}";
     }
+
+    public string GetEntityName()
+    {
+        return production != null ? production.productionName : "Unknown";
+    }
+
 }

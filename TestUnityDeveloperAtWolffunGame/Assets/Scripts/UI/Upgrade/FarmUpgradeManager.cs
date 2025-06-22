@@ -6,6 +6,7 @@ public class FarmUpgradeManager : MonoBehaviour, IGameLoadStep
 {
     [SerializeField] private Button buyLandButton;
     [SerializeField] private Button upgradeEquipmentButton;
+    [SerializeField] private Button hireWorkerButton;
 
     [SerializeField] private TextMeshProUGUI equipmentLevelText;
 
@@ -15,6 +16,7 @@ public class FarmUpgradeManager : MonoBehaviour, IGameLoadStep
     {
         buyLandButton.onClick.AddListener(BuyLandSlot);
         upgradeEquipmentButton.onClick.AddListener(UpgradeEquipment);
+        hireWorkerButton.onClick.AddListener(HireWorker); 
         UpdateEquipmentLevelText();
     }
 
@@ -37,6 +39,11 @@ public class FarmUpgradeManager : MonoBehaviour, IGameLoadStep
     {
         FarmManager.Instance.UpgradeEquipment();
         UpdateEquipmentLevelText();
+    }
+
+    private void HireWorker()
+    {
+        FarmWorkerManager.Instance?.HireWorker();
     }
 
     private void UpdateEquipmentLevelText()

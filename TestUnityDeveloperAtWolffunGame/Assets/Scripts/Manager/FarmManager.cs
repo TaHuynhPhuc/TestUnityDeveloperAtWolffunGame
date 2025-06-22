@@ -25,36 +25,30 @@ public class FarmManager : MonoBehaviour, IGameLoadStep
         else
         {
             Destroy(gameObject);
-            return;
         }
     }
 
     public void OnGameStateEntered()
     {
         equipmentData = GameDataInitializer.Instance.EquipmentData;
+
+        int slotCount = GameDataInitializer.Instance.PlayerInitial.startingLandSlots;
+        CreateInitialLandSlots(slotCount);
     }
 
     public void CreateInitialLandSlots(int count)
     {
         for (int i = 0; i < count; i++)
         {
-            GameObject landGO = Instantiate(landSlotPrefab, landSlotRoot);
-            LandSlot slot = landGO.GetComponent<LandSlot>();
-            if (slot != null)
-            {
-                RegisterLandSlot(slot);
-            }
+            AddNewLandSlot();
         }
-
         Debug.Log($"[FarmManager] Spawned {count} land slots.");
     }
 
     public void RegisterLandSlot(LandSlot slot)
     {
         if (!landSlots.Contains(slot))
-        {
             landSlots.Add(slot);
-        }
     }
 
     public void TrySpawnEntity(string entityName)
@@ -84,34 +78,22 @@ public class FarmManager : MonoBehaviour, IGameLoadStep
         Debug.LogWarning("[FarmManager] No available land slots.");
     }
 
-    public int GetOccupiedSlotCount()
-    {
-        return landSlots.Count(slot => slot.IsOccupied);
-    }
-
+    public int GetOccupiedSlotCount() => landSlots.Count(slot => slot.IsOccupied);
+    public int GetTotalSlotCount() => landSlots.Count;
 
     public void AddNewLandSlot()
     {
         GameObject landGO = Instantiate(landSlotPrefab, landSlotRoot);
         LandSlot slot = landGO.GetComponent<LandSlot>();
         if (slot != null)
-        {
             RegisterLandSlot(slot);
-        }
 
         Debug.Log("[FarmManager] New land slot added.");
     }
 
-    public int GetTotalSlotCount()
-    {
-        return landSlots.Count;
-    }
-
     public void UpgradeEquipment()
     {
-        equipmentData = GameDataInitializer.Instance.EquipmentData;
         int cost = equipmentData.upgradeCost;
-
         if (RuntimeDataManager.Instance.SpendGold(cost))
         {
             RuntimeDataManager.Instance.UpgradeEquipment();
@@ -120,6 +102,42 @@ public class FarmManager : MonoBehaviour, IGameLoadStep
         else
         {
             Debug.LogWarning("[FarmManager] Not enough gold to upgrade equipment.");
+        }
+    }
+
+    public FarmTask GetNextAvailableTask()
+    {
+        foreach (var slot in landSlots)
+        {
+            var entity = slot.GetComponentInChildren<FarmEntity>();
+            if (entity != null && entity.HasHarvestable() && !entity.IsAssigned)
+            {
+                entity.MarkAssigned();
+                return new FarmTask($"Harvesting \n{entity.GetEntityName()}", () => entity.HarvestByWorker());
+            }
+        }
+
+
+        foreach (var slot in landSlots)
+        {
+            if (!slot.IsOccupied && RuntimeDataManager.Instance.HasAnyEntity())
+            {
+                return new FarmTask("Planting", () => TrySpawnAnyAvailableEntity());
+            }
+        }
+
+        return null;
+    }
+
+    private void TrySpawnAnyAvailableEntity()
+    {
+        foreach (var entity in GameDataInitializer.Instance.FarmProductions)
+        {
+            if (RuntimeDataManager.Instance.HasEntity(entity.productionName))
+            {
+                TrySpawnEntity(entity.productionName);
+                return;
+            }
         }
     }
 
